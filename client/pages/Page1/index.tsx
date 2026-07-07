@@ -40,8 +40,8 @@ export default function Page1Component() {
         <button
           onClick={handleClick}
           style={{
-            backgroundColor: "#38BDF8",
-            color: "#FFFFFF",
+            backgroundColor: "#FACC15",
+            color: "#111111",
             borderRadius: "8px",
             padding: "10px 24px",
             fontWeight: 600,
@@ -52,10 +52,10 @@ export default function Page1Component() {
             fontFamily: "'Inter', sans-serif",
           }}
           onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = "#0EA5E9")
+            (e.currentTarget.style.backgroundColor = "#EAB308")
           }
           onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = "#38BDF8")
+            (e.currentTarget.style.backgroundColor = "#FACC15")
           }
         >
           {clicked ? "Clicked!" : "Get Started"}
