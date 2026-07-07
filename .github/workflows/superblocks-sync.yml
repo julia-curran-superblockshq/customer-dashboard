@@ -36,12 +36,4 @@ jobs:
           domain: staging.superblocks.com
           path: .
           sha: ${{ github.sha }}
-      - name: Deploy
-        uses: superblocksteam/deploy-action@v1
-        id: deploy
-        with:
-          token: ${{ secrets.SUPERBLOCKS_TOKEN }}
-          domain: staging.superblocks.com
-          path: .
-          sha: ${{ github.sha }}
 
