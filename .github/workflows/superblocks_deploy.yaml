@@ -20,7 +20,8 @@ jobs:
       - name: Deploy
         env:
           SUPERBLOCKS_TOKEN: ${{ secrets.SUPERBLOCKS_TOKEN }}
-          SUPERBLOCKS_DOMAIN: staging.superblocks.com
         run: |
           npm i -g @superblocksteam/cli
+          superblocks config set domain staging.superblocks.com
+          superblocks login -t "$SUPERBLOCKS_TOKEN"
           superblocks deploy
