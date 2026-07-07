@@ -1,39 +1,53 @@
-name: Sync changes to Superblocks
+# .github/workflows/deploy.yaml
+#
+# Deploys Superblocks apps (Superblocks-as-Code) whenever changes land on main.
+# Requires a repo secret SUPERBLOCKS_TOKEN (Settings > Secrets and variables > Actions).
+# Get the key from https://staging.superblocks.com/settings/apikeys (a service/deploy key, not a personal one).
+
+name: Deploy to Superblocks
+
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [main]
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+concurrency:
+  group: superblocks-deploy-${{ github.ref }}
+  cancel-in-progress: false # don't cancel an in-flight deploy
+
 jobs:
-  superblocks-sync:
+  deploy:
     runs-on: ubuntu-latest
-    name: Sync to Superblocks
-    permissions:
-      contents: read
-      packages: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-          persist-credentials: false
-      # Optional: needed only if the CLI version is private in GitHub Packages.
-      - name: Setup npm credentials
+          node-version: 20
+
+      - name: Install Superblocks CLI
+        run: npm install -g @superblocksteam/cli
+
+      - name: Set region
+        run: superblocks config set domain staging.superblocks.com
+
+      - name: Authenticate
         env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          SUPERBLOCKS_TOKEN: ${{ secrets.SUPERBLOCKS_TOKEN }}
         run: |
-          if [ -n "$NPM_AUTH_TOKEN" ]; then
-            echo "@superblocksteam:registry=https://npm.pkg.github.com" >> .npmrc
-            echo "always-auth=true" >> .npmrc
-            echo "//npm.pkg.github.com/:_authToken=$NPM_AUTH_TOKEN" >> .npmrc
+          if [ -z "$SUPERBLOCKS_TOKEN" ]; then
+            echo "::error::SUPERBLOCKS_TOKEN secret is empty or not set. Add it under Settings > Secrets and variables > Actions."
+            exit 1
           fi
-      - name: Sync
-        uses: superblocksteam/sync-action@v1
-        env:
-          NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc
-        with:
-          token: ${{ secrets.SUPERBLOCKS_TOKEN }}
-          domain: staging.superblocks.com
-          path: .
-          sha: ${{ github.sha }}
+          superblocks login -t "$SUPERBLOCKS_TOKEN"
+
+      # Push the committed state to Superblocks, then deploy it.
+      # Drop the push step if your pipeline only deploys already-pushed commits.
+      - name: Push
+        run: superblocks push
+
+      - name: Deploy
+        run: superblocks deploy
 
