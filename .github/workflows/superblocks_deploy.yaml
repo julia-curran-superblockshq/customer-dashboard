@@ -21,24 +21,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      # Needed if the CLI version is private in GitHub Packages
-      - name: Setup npm credentials
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-        run: |
-          if [ -n "$NPM_AUTH_TOKEN" ]; then
-            echo "@superblocksteam:registry=https://npm.pkg.github.com" >> .npmrc
-            echo "always-auth=true" >> .npmrc
-            echo "//npm.pkg.github.com/:_authToken=$NPM_AUTH_TOKEN" >> .npmrc
-          fi
-
       - name: Deploy
         env:
-          NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc
           SUPERBLOCKS_TOKEN: ${{ secrets.SUPERBLOCKS_TOKEN }}
         run: |
-          npm i -g @superblocksteam/cli
+          npm i -g @superblocksteam/cli@beta
           superblocks --version
+          superblocks --help
           superblocks config set domain staging.superblocks.com
           superblocks login -t "$SUPERBLOCKS_TOKEN"
           superblocks deploy
