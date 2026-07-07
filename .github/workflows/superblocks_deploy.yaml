@@ -1,7 +1,7 @@
 # .github/workflows/deploy.yaml
 #
 # Deploys Superblocks apps (Superblocks-as-Code) whenever changes land on main.
-# Requires a repo secret SUPERBLOCKS_API_KEY (Settings > Secrets and variables > Actions).
+# Requires a repo secret SUPERBLOCKS_TOKEN (Settings > Secrets and variables > Actions).
 # Get the key from https://app.superblocks.com/settings/apikeys (a service/deploy key, not a personal one).
 
 name: Deploy to Superblocks
@@ -31,9 +31,14 @@ jobs:
         run: npm install -g @superblocksteam/cli
 
       - name: Authenticate
-        run: superblocks login -t "$SUPERBLOCKS_API_KEY"
         env:
-          SUPERBLOCKS_API_KEY: ${{ secrets.SUPERBLOCKS_API_KEY }}
+          SUPERBLOCKS_TOKEN: ${{ secrets.SUPERBLOCKS_TOKEN }}
+        run: |
+          if [ -z "$SUPERBLOCKS_TOKEN" ]; then
+            echo "::error::SUPERBLOCKS_TOKEN secret is empty or not set. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          superblocks login -t "$SUPERBLOCKS_TOKEN"
 
       # If you self-host or use the EU region, uncomment and set your domain:
       # - name: Set region
