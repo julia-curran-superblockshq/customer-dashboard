@@ -18,8 +18,9 @@ jobs:
           fetch-depth: 0
 
       - name: Deploy
-        uses: superblocksteam/deploy-action@v1
-        id: deploy
-        with:
-          token: ${{ secrets.SUPERBLOCKS_TOKEN }}
-          domain: staging.superblocks.com
+        env:
+          SUPERBLOCKS_TOKEN: ${{ secrets.SUPERBLOCKS_TOKEN }}
+          SUPERBLOCKS_DOMAIN: staging.superblocks.com
+        run: |
+          npm i -g @superblocksteam/cli
+          superblocks deploy
