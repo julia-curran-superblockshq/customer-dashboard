@@ -1,11 +1,9 @@
 name: Sync changes to Superblocks
-
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
 jobs:
   superblocks-sync:
     runs-on: ubuntu-latest
@@ -19,7 +17,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
       # Optional: needed only if the CLI version is private in GitHub Packages.
       - name: Setup npm credentials
         env:
@@ -30,7 +27,6 @@ jobs:
             echo "always-auth=true" >> .npmrc
             echo "//npm.pkg.github.com/:_authToken=$NPM_AUTH_TOKEN" >> .npmrc
           fi
-
       - name: Sync
         uses: superblocksteam/sync-action@v1
         env:
@@ -40,12 +36,12 @@ jobs:
           domain: staging.superblocks.com
           path: .
           sha: ${{ github.sha }}
-
       - name: Deploy
         uses: superblocksteam/deploy-action@v1
         id: deploy
         with:
           token: ${{ secrets.SUPERBLOCKS_TOKEN }}
-
-
+          domain: staging.superblocks.com
+          path: .
+          sha: ${{ github.sha }}
 
