@@ -1,33 +1,48 @@
-name: Deploy
+# .github/workflows/deploy.yaml
+#
+# Deploys Superblocks apps (Superblocks-as-Code) whenever changes land on main.
+# Requires a repo secret SUPERBLOCKS_API_KEY (Settings > Secrets and variables > Actions).
+# Get the key from https://app.superblocks.com/settings/apikeys (a service/deploy key, not a personal one).
+
+name: Deploy to Superblocks
 
 on:
-  workflow_run:
-    workflows: ["Sync changes to Superblocks"]
-    types:
-      - completed
+  push:
+    branches: [main]
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+concurrency:
+  group: superblocks-deploy-${{ github.ref }}
+  cancel-in-progress: false # don't cancel an in-flight deploy
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    name: Deploy
-    permissions:
-      contents: read
-      packages: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-          persist-credentials: false
+          node-version: 20
+
+      - name: Install Superblocks CLI
+        run: npm install -g @superblocksteam/cli
+
+      - name: Authenticate
+        run: superblocks login -t "$SUPERBLOCKS_API_KEY"
+        env:
+          SUPERBLOCKS_API_KEY: ${{ secrets.SUPERBLOCKS_API_KEY }}
+
+      # If you self-host or use the EU region, uncomment and set your domain:
+      # - name: Set region
+      #   run: superblocks config set domain eu.superblocks.com
+
+      # Push the committed state to Superblocks, then deploy it.
+      # Drop the push step if your pipeline only deploys already-pushed commits.
+      - name: Push
+        run: superblocks push
 
       - name: Deploy
-        env:
-          SUPERBLOCKS_TOKEN: ${{ secrets.SUPERBLOCKS_TOKEN }}
-        run: |
-          npm i -g @superblocksteam/cli@beta
-          superblocks --version
-          superblocks --help
-          superblocks config set domain staging.superblocks.com
-          superblocks login -t "$SUPERBLOCKS_TOKEN"
-          superblocks deploy
+        run: superblocks deploy
